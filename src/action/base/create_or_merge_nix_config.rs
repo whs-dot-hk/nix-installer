@@ -4,7 +4,7 @@ use std::{
 };
 
 use nix_config_parser::NixConfig;
-use rand::Rng;
+use rand::RngExt;
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 use tracing::{span, Span};
 
@@ -28,12 +28,11 @@ const NIX_CONF_COMMENT_CHAR: char = '#';
 pub enum CreateOrMergeNixConfigError {
     #[error(transparent)]
     ParseNixConfig(#[from] nix_config_parser::ParseError),
-    #[error("Could not merge Nix configuration for key(s) {}; consider removing them from `{1}` in your editor, or removing your existing configuration with `rm {1}`",
-        .0
-        .iter()
-        .map(|v| format!("`{v}`"))
-        .collect::<Vec<_>>()
-        .join(", "))]
+    #[error(
+        "Could not merge Nix configuration for key(s) {keys}; consider removing them from `{path}` in your editor, or removing your existing configuration with `rm {path}`",
+        keys = .0.iter().map(|v| format!("`{v}`")).collect::<Vec<_>>().join(", "),
+        path = .1.display()
+    )]
     UnmergeableConfig(Vec<String>, std::path::PathBuf),
 }
 
@@ -294,8 +293,8 @@ impl Action for CreateOrMergeNixConfig {
         let parent_dir = self.path.parent().expect("File must be in a directory");
         let mut temp_file_path = parent_dir.to_owned();
         {
-            let mut rng = rand::thread_rng();
-            temp_file_path.push(format!("nix-installer-tmp.{}", rng.gen::<u32>()));
+            let mut rng = rand::rng();
+            temp_file_path.push(format!("nix-installer-tmp.{}", rng.random::<u32>()));
         }
         let mut temp_file = OpenOptions::new()
             .create(true)

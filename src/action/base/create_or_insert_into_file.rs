@@ -4,7 +4,7 @@ use crate::{
     action::{Action, ActionDescription, ActionError, ActionErrorKind, ActionTag, StatefulAction},
     util::OnMissing,
 };
-use rand::Rng;
+use rand::RngExt;
 use std::{
     io::SeekFrom,
     os::{unix::fs::MetadataExt, unix::prelude::PermissionsExt},
@@ -212,8 +212,8 @@ impl Action for CreateOrInsertIntoFile {
 
         let mut temp_file_path = parent_dir.to_owned();
         {
-            let mut rng = rand::thread_rng();
-            temp_file_path.push(format!("nix-installer-tmp.{}", rng.gen::<u32>()));
+            let mut rng = rand::rng();
+            temp_file_path.push(format!("nix-installer-tmp.{}", rng.random::<u32>()));
         }
         let mut temp_file = OpenOptions::new()
             .create(true)
