@@ -1,5 +1,5 @@
 {
-  "version": "3.11.1",
+  "version": "3.22.0",
   "actions": [
     {
       "action": {
@@ -1156,14 +1156,21 @@
     },
     {
       "action": {
-        "action_name": "remove_directory",
-        "path": "/nix/temp-install-dir"
+        "action_name": "systemctl_daemon_reload"
       },
       "state": "Completed"
     },
     {
       "action": {
-        "action_name": "systemctl_daemon_reload"
+        "action_name": "cleanup",
+        "remove_scratch_dir": {
+          "action": {
+            "action_name": "remove_directory",
+            "path": "/nix/temp-install-dir"
+          },
+          "state": "Completed"
+        },
+        "original_home_dir": "/home/ubuntu"
       },
       "state": "Completed"
     }
@@ -1172,7 +1179,6 @@
     "planner": "steam-deck",
     "persistence": "/home/nix",
     "settings": {
-      "determinate_nix": false,
       "modify_profile": true,
       "nix_build_group_name": "nixbld",
       "nix_build_group_id": 30000,

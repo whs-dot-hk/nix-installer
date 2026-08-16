@@ -2,7 +2,7 @@
   description = "The Determinate Nix Installer";
 
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/=0.1.793735";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0";
 
     crane.url = "github:ipetkov/crane/v0.20.0";
 
@@ -20,8 +20,8 @@
     , ...
     } @ inputs:
     let
-      nix_tarball_url_prefix = "https://releases.nixos.org/nix/nix-2.31.1/nix-2.31.1-";
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      nix_tarball_url_prefix = "https://releases.nixos.org/nix/nix-2.35.1/nix-2.35.1-";
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
 
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: (forSystem system f));
 
@@ -102,7 +102,7 @@
               rust-analyzer
               cargo-outdated
               cacert
-              # cargo-audit # NOTE(cole-h): build currently broken because of time dependency and Rust 1.80
+              cargo-audit
               cargo-watch
               nixpkgs-fmt
               check.check-rustfmt

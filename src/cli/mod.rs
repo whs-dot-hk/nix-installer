@@ -15,11 +15,7 @@ use url::Url;
 
 use self::subcommand::NixInstallerSubcommand;
 
-const FAIL_PKG_SUGGEST: &str = "\
-The Determinate Nix Installer failed.
-
-Try our macOS-native package instead, which can handle almost anything: https://dtr.mn/determinate-nix\
-";
+pub(crate) const ORIG_HOME_ENV: &str = "ORIG_HOME";
 
 #[async_trait::async_trait]
 pub trait CommandExecute {
@@ -59,8 +55,6 @@ pub struct NixInstallerCli {
 impl CommandExecute for NixInstallerCli {
     #[tracing::instrument(level = "trace", skip_all)]
     async fn execute(self) -> eyre::Result<ExitCode> {
-        let is_install_subcommand = matches!(self.subcommand, NixInstallerSubcommand::Install(_));
-
         let ret = match self.subcommand {
             NixInstallerSubcommand::Plan(plan) => plan.execute().await,
             NixInstallerSubcommand::SelfTest(self_test) => self_test.execute().await,
@@ -84,28 +78,6 @@ impl CommandExecute for NixInstallerCli {
         if let Some(cancelled) = maybe_cancelled {
             eprintln!("{}", cancelled.red());
             return Ok(ExitCode::FAILURE);
-        }
-
-        let is_macos = matches!(
-            target_lexicon::OperatingSystem::host(),
-            target_lexicon::OperatingSystem::MacOSX { .. }
-                | target_lexicon::OperatingSystem::Darwin
-        );
-
-        if is_install_subcommand && is_macos {
-            let is_ok_but_failed = ret.as_ref().is_ok_and(|code| code == &ExitCode::FAILURE);
-            let is_error = ret.as_ref().is_err();
-
-            if is_error || is_ok_but_failed {
-                // NOTE: If the error bubbled up, print it before we log the pkg suggestion
-                if let Err(ref err) = ret {
-                    eprintln!("{err:?}\n");
-                }
-
-                tracing::warn!("{}\n", FAIL_PKG_SUGGEST.trim());
-
-                return Ok(ExitCode::FAILURE);
-            }
         }
 
         ret
@@ -184,6 +156,12 @@ pub fn ensure_root() -> eyre::Result<()> {
             if preserve {
                 env_list.push(format!("{key}={value}"));
             }
+        }
+
+        // NOTE(cole-h): record the original caller's home directory so that we can attempt to clean
+        // up their profile in the case of a single-user installation
+        if let Some(home_dir) = dirs::home_dir() {
+            env_list.push(format!("{ORIG_HOME_ENV}={}", home_dir.display()))
         }
 
         if !env_list.is_empty() {

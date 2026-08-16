@@ -11,6 +11,8 @@ use tracing::{span, Span};
 
 use crate::action::{Action, ActionDescription};
 
+pub(crate) const DEFAULT_PROFILE_PATH: &str = "/nix/var/nix/profiles/default";
+
 /**
 Setup the default Nix profile with `nss-cacert` and `nix` itself.
  */
@@ -76,6 +78,7 @@ impl Action for SetupDefaultProfile {
             "HOME",
             dirs::home_dir().ok_or_else(|| Self::error(SetupDefaultProfileError::NoRootHome))?,
         );
+        load_db_command.env_remove("NIX_REMOTE");
         tracing::trace!(
             "Executing `{:?}` with stdin from `{}`",
             load_db_command.as_std(),
@@ -117,9 +120,8 @@ impl Action for SetupDefaultProfile {
 
         let profile = crate::profile::Profile {
             nix_store_path: &nix_pkg,
-            nss_ca_cert_path: &nss_ca_cert_pkg,
 
-            profile: std::path::Path::new("/nix/var/nix/profiles/default"),
+            profile: std::path::Path::new(DEFAULT_PROFILE_PATH),
             pkgs: &[&nix_pkg, &nss_ca_cert_pkg],
         };
         profile

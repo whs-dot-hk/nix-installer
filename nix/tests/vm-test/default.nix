@@ -10,10 +10,6 @@ let
     NIX_PATH=$(readlink -f nix.tar.xz)
     RUST_BACKTRACE="full" ./nix-installer install --nix-package-url "file://$NIX_PATH" --no-confirm
   '';
-  nix-installer-install-determinate = ''
-    NIX_PATH=$(readlink -f nix.tar.xz)
-    RUST_BACKTRACE="full" ./nix-installer install --nix-package-url "file://$NIX_PATH" --no-confirm --logger pretty --log-directive nix_installer=trace --determinate
-  '';
   cure-script-multi-user = ''
     tar xvf nix.tar.xz
     ./nix-*/install --no-channel-add --yes --daemon
@@ -203,24 +199,6 @@ let
       check = installCases.install-default.check + ''
         grep --quiet "^# foobar" /etc/nix/nix.custom.conf
       '';
-      uninstall = installCases.install-default.uninstall;
-      uninstallCheck = installCases.install-default.uninstallCheck;
-    };
-    install-determinate = {
-      install = nix-installer-install-determinate;
-      check = ''
-        if ! systemctl is-active determinate-nixd.socket; then
-          echo "determinate-nixd.socket is not active"
-          sudo journalctl -eu determinate-nixd.socket
-          exit 1
-        fi
-
-        if ! determinate-nixd status; then
-          echo "determinate-nixd is not working"
-          sudo journalctl -eu determinate-nixd.service
-          exit 1
-        fi
-      '' + installCases.install-default.check;
       uninstall = installCases.install-default.uninstall;
       uninstallCheck = installCases.install-default.uninstallCheck;
     };
@@ -469,16 +447,6 @@ let
       system = "x86_64-linux";
     };
 
-    "fedora-v36" = {
-      image = import <nix/fetchurl.nix> {
-        url = "https://app.vagrantup.com/generic/boxes/fedora36/versions/4.1.12/providers/libvirt.box";
-        hash = "sha256-rxPgnDnFkTDwvdqn2CV3ZUo3re9AdPtSZ9SvOHNvaks=";
-      };
-      rootDisk = "box.img";
-      system = "x86_64-linux";
-      upstreamScriptsWork = false; # SELinux!
-    };
-
     "fedora-v37" = {
       image = import <nix/fetchurl.nix> {
         url = "https://app.vagrantup.com/generic/boxes/fedora37/versions/4.2.14/providers/libvirt.box";
@@ -487,33 +455,6 @@ let
       rootDisk = "box.img";
       system = "x86_64-linux";
       upstreamScriptsWork = false; # SELinux!
-    };
-
-    # Currently fails with 'error while loading shared libraries:
-    # libsodium.so.23: cannot stat shared object: Invalid argument'.
-    /*
-      "rhel-v6" = {
-      image = import <nix/fetchurl.nix> {
-      url = "https://app.vagrantup.com/generic/boxes/rhel6/versions/4.1.12/providers/libvirt.box";
-      hash = "sha256-QwzbvRoRRGqUCQptM7X/InRWFSP2sqwRt2HaaO6zBGM=";
-      };
-      rootDisk = "box.img";
-      upstreamScriptsWork = false; # SELinux!
-      system = "x86_64-linux";
-      };
-    */
-
-    "rhel-v7" = {
-      image = import <nix/fetchurl.nix> {
-        url = "https://app.vagrantup.com/generic/boxes/rhel7/versions/4.1.12/providers/libvirt.box";
-        hash = "sha256-b4afnqKCO9oWXgYHb9DeQ2berSwOjS27rSd9TxXDc/U=";
-      };
-      rootDisk = "box.img";
-      upstreamScriptsWork = false; # SELinux!
-      system = "x86_64-linux";
-      skip = [
-        "install-determinate" # RHEL v7 has systemd 219 (2015-02-16); determinate-nixd requires at least 227 (2015-10-07)
-      ];
     };
 
     "rhel-v8" = {
