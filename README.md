@@ -8,17 +8,17 @@
 https://releases.nixos.org/nix/nix-VERSION/nix-VERSION-SYSTEM.tar.xz
 ```
 
-Example for Nix 2.35.1 on x86_64 Linux:
+Examples for Nix 2.35.1:
 
 ```shell
+# Linux amd64
 export NIX_TARBALL_URL="https://releases.nixos.org/nix/nix-2.35.1/nix-2.35.1-x86_64-linux.tar.xz"
+
+# Linux arm64
+export NIX_TARBALL_URL="https://releases.nixos.org/nix/nix-2.35.1/nix-2.35.1-aarch64-linux.tar.xz"
+
 cargo build --release
 ```
-
-Other systems:
-
-- `https://releases.nixos.org/nix/nix-2.35.1/nix-2.35.1-aarch64-linux.tar.xz`
-- `https://releases.nixos.org/nix/nix-2.35.1/nix-2.35.1-aarch64-darwin.tar.xz`
 
 ## Run
 
